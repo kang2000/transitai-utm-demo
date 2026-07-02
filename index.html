@@ -111,8 +111,8 @@
         <!-- 4) ALERTS / NOTIFICATIONS -->
         <section id="screen-alerts" class="screen">
           <h2 class="screen-title">🔔 Alerts &amp; Notifications</h2>
-          <p class="screen-help">Delay notices are produced by the resolution-logic
-            engine when a route you subscribe to is delayed.</p>
+          <p class="screen-help">Live-style notices for the routes you follow. Delays on
+            unsubscribed routes stay hidden until you turn them on.</p>
           <div id="alertList" class="alert-list"></div>
 
           <h3 class="sub">Your route subscriptions</h3>
@@ -151,11 +151,10 @@
 
         <!-- 7) STAFF DEMO PANEL (drives the resolution proof) -->
         <section id="screen-admin" class="screen">
-          <h2 class="screen-title">🛠️ Staff / Demo Control
-            <span class="sim-tag">demo control</span></h2>
-          <p class="screen-help">Transport staff demo controls. Mark a route delayed to trigger the
-            <strong>resolution-refutation</strong> proof that notifies subscribed users. The
-            separate Word file remains the Administrator Manual for grading.</p>
+          <h2 class="screen-title">🛠️ Staff Control Panel
+            <span class="sim-tag">Operations</span></h2>
+          <p class="screen-help">Transport staff controls for route delay updates,
+            passenger reports and the resolution-refutation proof used in the report.</p>
 
           <div class="demo-time">
             <label for="demoTimeSelect">Demo time</label>
@@ -170,13 +169,26 @@
             <small id="demoTimeNote">Schedule and ETA cards use this time.</small>
           </div>
 
+          <section class="staff-card staff-issues-card">
+            <div class="card-title">
+              <span>Reported issues</span>
+              <small id="staffIssueCount">No open reports</small>
+            </div>
+            <div id="staffIssueList" class="staff-issue-list"></div>
+          </section>
+
+          <h3 class="sub compact">Route delay controls</h3>
           <div id="routeAdmin" class="route-admin"></div>
 
-          <h3 class="sub">Resolution proof trace
-            <span class="muted">(report Figure 5.2)</span></h3>
-          <div id="proofBox" class="proof-box">
-            <em class="muted">Toggle a delay above to run the proof…</em>
-          </div>
+          <section class="staff-card proof-card">
+            <div class="card-title">
+              <span>Resolution proof trace</span>
+              <small>Report Figure 5.2</small>
+            </div>
+            <div id="proofBox" class="proof-box">
+              <em class="muted">Toggle a delay above to run the proof…</em>
+            </div>
+          </section>
         </section>
 
         <!-- ============ Bottom navigation ============ -->

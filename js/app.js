@@ -19,7 +19,7 @@ const App = (() => {
     if (id === "screen-home")     renderHome();
     if (id === "screen-timetable") renderTimetable();
     if (id === "screen-alerts")   renderAlerts();
-    if (id === "screen-admin")    { renderDemoTimeControls(); renderAdmin(); }
+    if (id === "screen-admin")    { renderDemoTimeControls(); renderAdmin(); renderStaffIssues(); }
     if (id === "screen-feedback") renderFeedbackLog();
   }
 
@@ -223,43 +223,79 @@ const App = (() => {
   }
 
   /* ---- Alerts screen -------------------------------------------------- */
+  function routeParts(route) {
+    const [code, path = "Campus shuttle route"] = route.name.split("—").map(s => s.trim());
+    return { code, path };
+  }
+
   function delaySummary(route) {
     const stop = KBUtil.stopById(route.stops[0]);
     const nd = KBUtil.nextDeparture(route, stop.id);
     return `
       <div class="alert-grid">
-        <span>Next bus</span><strong>${esc(stop.name.split(" (")[0])}</strong>
+        <span>Boarding point</span><strong>${esc(stop.name.split(" (")[0])}</strong>
         <span>Scheduled</span><strong>${nd.scheduledTime}</strong>
-        <span>Estimated</span><strong>${nd.estimatedTime}</strong>
-        <span>Delay</span><strong>+${nd.delayMins} min</strong>
-        <span>Service</span><strong>${nd.serviceWindow}, ${esc(nd.frequency.toLowerCase())}</strong>
+        <span>Estimated ETA</span><strong>${nd.estimatedTime}</strong>
+        <span>Service window</span><strong>${nd.serviceWindow}</strong>
+        <span>Frequency</span><strong>${esc(nd.frequency)}</strong>
       </div>`;
   }
 
   function renderAlerts() {
     const list = document.getElementById("alertList");
     const subs = document.getElementById("subList");
-
-    const delayed = subscribedDelayedRoutes();
-    const hiddenDelayedCount = KB.delayedRoutes.length - delayed.length;
-    list.innerHTML = delayed.length
-      ? delayed.map(r => `
-          <div class="alert">
-            <h4>⚠️ ${esc(r.name)} delayed</h4>
-            <p>Service is running late. Subscribed users were notified by the resolution-logic engine.</p>
-            ${delaySummary(r)}
-            <time>just now · staff update</time>
-          </div>`).join("")
-      : `<div class="alert info"><h4>✅ No active delays</h4>
-           <p>${hiddenDelayedCount
-             ? "No alerts for your subscribed routes. Other delayed routes stay hidden until you subscribe."
-             : "All subscribed routes are running to schedule."}</p></div>`;
+    if (!list || !subs) return;
 
     const mySubs = KB.subscriptions.filter(s => s.user === Chat.DEMO_USER);
+    const delayed = subscribedDelayedRoutes();
+    const hiddenDelayedCount = KB.delayedRoutes.length - delayed.length;
+    const statusText = delayed.length
+      ? `${delayed.length} active alert${delayed.length === 1 ? "" : "s"}`
+      : "Subscribed routes clear";
+    const statusNote = hiddenDelayedCount
+      ? `${hiddenDelayedCount} delayed route${hiddenDelayedCount === 1 ? "" : "s"} hidden by subscription settings`
+      : `${mySubs.length} subscribed route${mySubs.length === 1 ? "" : "s"} monitored`;
+    const cards = delayed.length
+      ? delayed.map(r => {
+          const nd = KBUtil.nextDeparture(r, r.stops[0]);
+          const { code, path } = routeParts(r);
+          return `
+          <article class="alert alert-active">
+            <div class="alert-head">
+              <div>
+                <span class="alert-label">Delayed route</span>
+                <h4>${esc(code)}</h4>
+                <p>${esc(path)}</p>
+              </div>
+              <strong>+${nd.delayMins} min</strong>
+            </div>
+            ${delaySummary(r)}
+            <div class="alert-source">Source: ${esc(r.source)} ${esc(KB.meta.lastUpdated)}</div>
+            <time>Updated just now by staff control</time>
+          </article>`;
+        }).join("")
+      : `<article class="alert info"><h4>No active delay on subscribed routes</h4>
+           <p>${hiddenDelayedCount
+             ? "Other delayed routes are not shown because Ali is not subscribed to them."
+             : "All subscribed routes are running within the configured timetable."}</p></article>`;
+
+    list.innerHTML = `
+      <section class="alert-summary-card">
+        <div>
+          <span>Subscribed route status</span>
+          <strong>${esc(statusText)}</strong>
+          <small>${esc(statusNote)}</small>
+        </div>
+        <em class="${delayed.length ? "is-alert" : "is-clear"}">${delayed.length ? "Action" : "Normal"}</em>
+      </section>
+      ${cards}`;
+
     subs.innerHTML = KB.routes.map(r => {
       const on = mySubs.some(s => s.route === r.id);
-      return `<div class="sub-row"><span>${esc(r.name)}</span>
-        <button class="link-btn" data-sub="${r.id}">${on ? "Unsubscribe" : "Subscribe"}</button></div>`;
+      const { code, path } = routeParts(r);
+      return `<div class="sub-row ${on ? "is-on" : ""}">
+        <span><b>${esc(code)}</b><small>${esc(path)}</small></span>
+        <button class="link-btn sub-toggle ${on ? "is-on" : ""}" data-sub="${r.id}">${on ? "On" : "Off"}</button></div>`;
     }).join("");
   }
 
@@ -289,21 +325,65 @@ const App = (() => {
   /* ---- Staff Demo screen + resolution proof --------------------------- */
   function renderAdmin() {
     const box = document.getElementById("routeAdmin");
+    if (!box) return;
     box.innerHTML = KB.routes.map(r => {
       const on = KBUtil.isDelayed(r.id);
       const stops = r.stops.map(id => KBUtil.stopById(id).name.split(" (")[0]).join(" › ");
       const delay = KBUtil.delayMinutes(r.id);
-      return `<div class="route-row">
-        <div>
-          <div class="rname">${esc(r.name)}</div>
+      const nd = KBUtil.nextDeparture(r, r.stops[0]);
+      const { code, path } = routeParts(r);
+      const staffWindow = `${r.operating.start.slice(0, 2)}-${r.operating.end}`;
+      return `<div class="route-row ${on ? "is-delayed" : ""}">
+        <div class="route-admin-main">
+          <div class="route-admin-head">
+            <div>
+              <span class="staff-kicker">Route control</span>
+              <div class="rname">${esc(code)}</div>
+            </div>
+            <span class="route-status-pill ${on ? "delayed" : "running"}">${on ? `Delayed +${delay} min` : "Running"}</span>
+          </div>
+          <div class="rpath">${esc(path)}</div>
+          <div class="admin-metrics">
+            <span><em>${on ? "ETA" : "Next"}</em><b>${esc(on ? nd.estimatedTime : nd.scheduledTime)}</b></span>
+            <span><em>Service</em><b>${esc(staffWindow)}</b></span>
+            <span><em>Freq.</em><b>${r.headway} min</b></span>
+          </div>
           <div class="rstops">${esc(stops)}</div>
-          <div class="rschedule">Service ${esc(r.operating.start)}–${esc(r.operating.end)} · every ${r.headway} min${delay ? ` · delayed +${delay} min` : ""}</div>
         </div>
         <label class="switch">
           <input type="checkbox" data-delay="${r.id}" ${on ? "checked" : ""}>
           <span class="slider"></span>
         </label></div>`;
     }).join("");
+  }
+
+  function issuePriority(type) {
+    const t = type.toLowerCase();
+    if (t.includes("did not arrive") || t.includes("missed")) return "High";
+    if (t.includes("wrong")) return "Review";
+    return "Open";
+  }
+
+  function renderStaffIssues() {
+    const list = document.getElementById("staffIssueList");
+    const count = document.getElementById("staffIssueCount");
+    if (!list || !count) return;
+    count.textContent = KB.feedbackLog.length
+      ? `${KB.feedbackLog.length} open report${KB.feedbackLog.length === 1 ? "" : "s"}`
+      : "No open reports";
+    list.innerHTML = KB.feedbackLog.length
+      ? KB.feedbackLog.map((f, i) => {
+          const priority = issuePriority(f.type);
+          return `<article class="staff-issue">
+            <div class="issue-top">
+              <span>${esc(f.type)}</span>
+              <em class="${priority.toLowerCase()}">${esc(priority)}</em>
+            </div>
+            <p>${esc(f.text || "(no details provided)")}</p>
+            <small>Report #${String(KB.feedbackLog.length - i).padStart(3, "0")} · ${esc(f.at)}</small>
+          </article>`;
+        }).join("")
+      : `<div class="empty-card">No passenger reports yet. New Feedback submissions appear here for staff follow-up.</div>`;
   }
 
   function runProof(routeId) {
@@ -331,6 +411,7 @@ const App = (() => {
   function onDelayToggle(routeId, isDelayed) {
     KBUtil.setDelayed(routeId, isDelayed);
     renderAdmin();
+    renderStaffIssues();
     renderHome();
     if (document.getElementById("screen-timetable")?.classList.contains("is-active")) {
       renderTimetable();
@@ -352,6 +433,7 @@ const App = (() => {
   /* ---- Feedback screen ------------------------------------------------ */
   function renderFeedbackLog() {
     const log = document.getElementById("fbLog");
+    if (!log) return;
     log.innerHTML = KB.feedbackLog.length
       ? KB.feedbackLog.map(f => `<div class="fb-item"><b>${esc(f.type)}</b> · ${esc(f.at)}<br>${esc(f.text || "(no details)")}</div>`).join("")
       : `<div class="empty">No reports yet.</div>`;
@@ -426,6 +508,7 @@ const App = (() => {
       });
       document.getElementById("fbText").value = "";
       renderFeedbackLog();
+      renderStaffIssues();
       alert("✅ Report submitted. Logged for transport staff follow-up.");
     });
   }

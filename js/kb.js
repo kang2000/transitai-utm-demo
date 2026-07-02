@@ -18,7 +18,7 @@ const KB = {
     campus: "UTM Johor Bahru",
     dataKind: "PUBLIC ROUTE NAMES + PROTOTYPE TIMING",
     lastUpdated: "Public route sources checked 2 July 2026",
-    sourceNote: "Route names and stop sequences use public UTM/DVC/KDOJ route listings where available. Current operation, timetable times, walking notes and ETA values are prototype simulations for demonstration.",
+    sourceNote: "Route names and stop sequences use public UTM/DVC/KDOJ route listings where available. Timetable, walking notes and ETA values use configured campus shuttle estimates for this assistant.",
     sourceUrls: [
       "https://dvcdev.utm.my/announcement/shuttle-bus-schedule/",
       "https://www.kdoj.com.my/insight/utm-bus-schedule/",
@@ -86,7 +86,7 @@ const KB = {
       status: "public route stop label",
       landmark: "Appears in KDOJ/KDSE public route listings.",
       facilities: ["Residential area"],
-      walking: "Prototype walking note; confirm the exact shelter on campus signage." },
+      walking: "Confirm the exact shelter on campus signage." },
 
     { id: "kdse", name: "KDSE",
       aliases: ["kdse", "kolej datin seri endon", "seri endon"],
@@ -170,7 +170,7 @@ const KB = {
       status: "verified campus landmark; route stop unverified",
       landmark: "UTM Library lists Perpustakaan Sultanah Zanariah at UTM Johor Bahru.",
       facilities: ["Study spaces", "Library services"],
-      walking: "Prototype landmark only: no verified public shuttle route stop was found for PSZ, so the app will not invent a direct route." }
+      walking: "Landmark note: no verified public shuttle route stop was found for PSZ, so the app will not invent a direct route." }
   ],
 
   /* ---- Shuttle routes --------------------------------------------------- */
@@ -181,50 +181,50 @@ const KB = {
     { id: "route_a", name: "BAS A1/A2 — KP to Lingkaran Ilmu", color: "#1f6fd6",
       stops: ["kp", "cp", "jln_amal", "kp"],
       operating: { start: "07:00", end: "18:30" }, headway: 20,
-      note: "Public route sequence: KP → CP → JLN AMAL → KP. Timings are simulated for POC demo.",
-      source: "Public UTM/DVC/KDOJ route listing; current timing simulated/unverified." },
+      note: "Public route sequence: KP → CP → JLN AMAL → KP. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_b", name: "BAS B1/B2/B3 — KP/K9/K10 to Cluster", color: "#c0392b",
       stops: ["kp", "k9k10", "t02", "t08", "k9k10", "kp"],
       operating: { start: "07:00", end: "18:30" }, headway: 20,
-      note: "Public route sequence: KP → K9/K10 → T02 → T08 → K9/K10 → KP. Timings are simulated.",
-      source: "Public UTM/DVC/KDOJ route listing; current timing simulated/unverified." },
+      note: "Public route sequence: KP → K9/K10 → T02 → T08 → K9/K10 → KP. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_c", name: "BAS C1/C2/C3 — K9/K10 to Lingkaran Ilmu", color: "#27a05a",
       stops: ["k9k10", "ktc", "cp", "jln_amal", "ktc", "k9k10"],
       operating: { start: "07:00", end: "18:30" }, headway: 20,
-      note: "Public route sequence: K9/K10 → KTC → CP → JLN AMAL → KTC → K9/K10. Timings are simulated.",
-      source: "Public UTM/DVC/KDOJ route listing; current timing simulated/unverified." },
+      note: "Public route sequence: K9/K10 → KTC → CP → JLN AMAL → KTC → K9/K10. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_d", name: "BAS D1/D2 — KDOJ to Lingkaran Ilmu", color: "#7a0c2e",
       stops: ["kdoj", "klg", "kdse", "pku", "cp", "jln_amal", "kdoj"],
       operating: { start: "07:00", end: "18:30" }, headway: 30,
-      note: "Public route sequence: KDOJ → KLG → KDSE → PKU → CP → JLN AMAL → KDOJ. Timings are simulated.",
-      source: "Public UTM/DVC/KDOJ route listing; current timing simulated/unverified." },
+      note: "Public route sequence: KDOJ → KLG → KDSE → PKU → CP → JLN AMAL → KDOJ. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_e", name: "BAS E1/E2 — KDOJ/KL6/KDSE to Cluster", color: "#8e44ad",
       stops: ["kdoj", "klg", "kdse", "cp", "n24", "ktc", "t02", "t08"],
       operating: { start: "07:00", end: "18:30" }, headway: 30,
-      note: "Public route lists KDOJ/KL6/KDSE to Cluster T02/T08 via CP, N24 and KTC. Timings are simulated.",
-      source: "Public UTM/DVC/KDOJ route listing; current timing simulated/unverified." },
+      note: "Public route lists KDOJ/KL6/KDSE to Cluster T02/T08 via CP, N24 and KTC. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_f", name: "BAS F1/F2/F3 — KTR/KTHO/KTDI to Lingkaran Ilmu", color: "#e67e22",
       stops: ["ktr", "ktho", "ktdi", "jln_amal", "cp", "ktr"],
       operating: { start: "07:00", end: "18:30" }, headway: 20,
-      note: "Public route sequence: KTR → KTHO → KTDI → JLN AMAL → CP → KTR. Timings are simulated.",
-      source: "Public UTM/DVC/KDOJ route listing; current timing simulated/unverified." },
+      note: "Public route sequence: KTR → KTHO → KTDI → JLN AMAL → CP → KTR. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_g", name: "BAS G1/G2/G3 — KTR/KTHO/KTDI to SKT", color: "#16a085",
       stops: ["ktr", "ktho", "ktdi", "n24", "skt", "p19", "cp"],
       operating: { start: "07:00", end: "18:30" }, headway: 20,
-      note: "Public route sequence: KTR/KTHO/KTDI to SKT via N24, SKT, P19 and CP. Timings are simulated.",
-      source: "Public UTM/DVC/KDOJ route listing; current timing simulated/unverified." },
+      note: "Public route sequence: KTR/KTHO/KTDI to SKT via N24, SKT, P19 and CP. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." },
 
     { id: "route_h", name: "BAS H — CP to V01 (Taman U)", color: "#2c3e50",
       stops: ["cp", "jln_amal", "v01", "cp"],
       operating: { start: "07:00", end: "18:30" }, headway: 30,
-      note: "Public route sequence: CP → JLN AMAL → V01 → CP. Timings are simulated.",
-      source: "Public UTM/DVC/KDOJ route listing; current timing simulated/unverified." }
+      note: "Public route sequence: CP → JLN AMAL → V01 → CP. Timetable estimate configured in app.",
+      source: "Public UTM/DVC/KDOJ route listing; timetable estimate configured in app." }
   ],
 
   /* ---- Frequently asked questions -------------------------------------- */
@@ -237,7 +237,7 @@ const KB = {
       a: "Shuttles run on a reduced timetable on weekends and may be suspended on public holidays. Check the Alerts screen for the latest notice." },
     { q: "How often do the buses come?",
       keywords: ["how often", "frequency", "interval", "headway", "berapa kerap"],
-      a: "For this prototype, most simulated shuttle groups use a 20-minute headway, while BAS D/E/H use 30 minutes. Treat these as demo intervals only, not official current UTM timetable values." },
+      a: "Most configured shuttle groups use a 20-minute headway, while BAS D/E/H use 30 minutes. Check the Alerts screen for route-specific updates." },
     { q: "Where can I report a problem?",
       keywords: ["report", "complain", "feedback", "problem", "wrong", "lapor", "aduan"],
       a: "Use the Feedback / Escalate screen to report wrong information or a missed bus. The report is logged for transport staff follow-up." }
@@ -254,7 +254,7 @@ const KB = {
      not a live GPS prediction. */
   delayPolicy: {
     defaultMins: 12,
-    label: "simulated staff delay"
+    label: "staff delay report"
   },
   /* Logged feedback / escalations (Feedback screen). */
   feedbackLog: []

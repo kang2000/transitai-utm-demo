@@ -161,16 +161,23 @@ body{margin:0;background:linear-gradient(160deg,#dfe4ee,#eef1f6);color:var(--ink
 .switch input:checked + .slider{background:var(--warn)}
 .switch input:checked + .slider::before{transform:translateX(20px)}
 
-.proof-box{background:#0f1320;color:#d8e0f0;border-radius:12px;padding:12px;
-  font-family:"SF Mono",Menlo,Consolas,monospace;font-size:11.5px;line-height:1.6;overflow-x:auto}
-.proof-step{display:flex;flex-wrap:wrap;gap:8px;padding:3px 0;border-bottom:1px solid #1d2438}
-.proof-step:last-child{border-bottom:0}
-.proof-step .tag{flex:0 0 46px;color:var(--gold);font-weight:700}
-.proof-step .cl{flex:1;color:#e9eefb;white-space:normal;overflow-wrap:anywhere}
-.proof-step .why{flex:0 0 100%;color:#7e8aa8;font-size:10.5px;padding-left:54px}
-.proof-step.final .cl{color:#5fe39a;font-weight:700}
-.proof-result{margin-top:8px;font-size:12px;font-weight:700}
-.proof-result.ok{color:var(--ok)} .proof-result.no{color:var(--gold-d)}
+.proof-box{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:12px;
+  padding:10px;font-size:12px;line-height:1.35;overflow:visible;box-shadow:0 2px 8px rgba(20,25,40,.06)}
+.proof-step{display:grid;grid-template-columns:56px minmax(0,1fr);gap:3px 8px;
+  padding:8px;border:1px solid var(--line);border-radius:9px;background:#f8fafc;margin-bottom:7px}
+.proof-step:last-child{margin-bottom:0}
+.proof-step .tag{grid-row:1/3;width:52px;min-height:24px;border-radius:7px;background:#fff4cf;
+  color:var(--maroon);border:1px solid #f0d78d;font-weight:800;display:flex;align-items:center;
+  justify-content:center;font-size:10.7px}
+.proof-step .cl{font-family:"SF Mono",Menlo,Consolas,monospace;color:#182033;white-space:normal;
+  overflow-wrap:anywhere;font-size:11.4px}
+.proof-step .why{grid-column:2;color:var(--muted);font-size:10.7px;padding-left:0}
+.proof-step.final{background:#eef8f2;border-color:#bfe8cd}
+.proof-step.final .tag{background:#dff3e7;border-color:#bfe8cd;color:#0f7a3e}
+.proof-step.final .cl{color:#0f7a3e;font-weight:800}
+.proof-result{margin-top:9px;font-size:12px;font-weight:800;border-radius:9px;padding:9px 10px}
+.proof-result.ok{color:#0f7a3e;background:#eef8f2;border:1px solid #bfe8cd}
+.proof-result.no{color:#8a5b00;background:#fff6d8;border:1px solid #ecd98a}
 
 /* ---------------- tabbar ---------------- */
 .tabbar{display:flex;background:#fff;border-top:1px solid var(--line)}

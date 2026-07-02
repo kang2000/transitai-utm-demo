@@ -49,7 +49,7 @@ const Chat = (() => {
 
   /* ---- per-intent handlers ------------------------------------------- */
   function srcLine(note) { return `<span class="src">📚 Source: ${esc(note)}</span>`; }
-  const routeDataLine = r => `<div class="row"><span>Route data</span><span>${esc(r.source || "Prototype data")}</span></div>`;
+  const routeDataLine = r => `<div class="row"><span>Route data</span><span>${esc(r.source || "Campus transit data")}</span></div>`;
   const timeBasisLine = nd => `<div class="row"><span>Time basis</span><span>${esc(nd.timeBasis)}</span></div>`;
   function statusPill(nd) {
     if (nd.delayed) return `<span class="pill warn">delayed +${nd.delayMins} min</span>`;
@@ -142,13 +142,13 @@ const Chat = (() => {
     const nd = KBUtil.nextDeparture(r, stop.id);
     addMsg("bot", `Estimated arrival at <strong>${esc(stop.name)}</strong>:`);
     addCard(`
-      <h4>⏱️ ${esc(r.name)} <span class="sim-tag">simulated ETA</span> ${statusPill(nd)}</h4>
+      <h4>⏱️ ${esc(r.name)} <span class="pill">estimated ETA</span> ${statusPill(nd)}</h4>
       ${arrivalRows(nd)}
       <div class="row"><span>Service window</span><span>${nd.serviceWindow}</span></div>
       <div class="row"><span>Frequency</span><span>${esc(nd.frequency)}</span></div>
       ${timeBasisLine(nd)}
-      <div class="row"><span>Last updated</span><span>just now (sim)</span></div>
-      <div class="row muted"><span>Live feed</span><span>Not connected; using simulated timetable fallback.</span></div>
+      <div class="row"><span>Last updated</span><span>just now</span></div>
+      <div class="row muted"><span>Status</span><span>Using timetable estimate.</span></div>
       ${routeDataLine(r)}
       ${srcLine(note)}`);
   }

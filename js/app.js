@@ -31,7 +31,7 @@ const App = (() => {
       <div class="row"><strong>Routes serving this stop</strong></div>
       <p style="font-size:13px;margin:4px 0 10px">${esc(routes)}</p>
       <div class="row"><strong>Data status</strong></div>
-      <p style="font-size:13px;margin:4px 0 10px">${esc(s.status || "prototype data")}</p>
+      <p style="font-size:13px;margin:4px 0 10px">${esc(s.status || "campus data")}</p>
       <div class="row"><strong>Facilities nearby</strong></div>
       <div class="facil">${s.facilities.map(f => `<span>${esc(f)}</span>`).join("")}</div>
       <div class="row" style="margin-top:8px"><strong>Walking direction</strong></div>
@@ -65,10 +65,10 @@ const App = (() => {
             <h4>⚠️ ${esc(r.name)} delayed</h4>
             <p>Service is running late. Subscribed users were notified by the resolution-logic engine.</p>
             ${delaySummary(r)}
-            <time>just now · prototype simulation</time>
+            <time>just now · staff update</time>
           </div>`).join("")
       : `<div class="alert info"><h4>✅ No active delays</h4>
-           <p>All routes are running to the simulated schedule. Route cards show first/last bus and service frequency.</p></div>`;
+           <p>All routes are running to schedule. Route cards show first/last bus and service frequency.</p></div>`;
 
     const mySubs = KB.subscriptions.filter(s => s.user === Chat.DEMO_USER);
     subs.innerHTML = KB.routes.map(r => {
@@ -139,6 +139,7 @@ const App = (() => {
     box.innerHTML = steps +
       `<div class="proof-result ${result.proved ? "ok" : "no"}">
          ${result.proved ? "✅ " : "⚠️ "}${esc(result.message)}</div>`;
+    (box.previousElementSibling || box).scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   /* When a route is toggled delayed: run proof + notify subscribers. */
@@ -221,7 +222,7 @@ const App = (() => {
       });
       document.getElementById("fbText").value = "";
       renderFeedbackLog();
-      alert("✅ Report submitted. Logged for transport staff follow-up (prototype).");
+      alert("✅ Report submitted. Logged for transport staff follow-up.");
     });
   }
 

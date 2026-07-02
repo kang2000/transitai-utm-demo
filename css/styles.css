@@ -64,8 +64,9 @@ body{margin:0;background:linear-gradient(160deg,#dfe4ee,#eef1f6);color:var(--ink
 .home-title h1{margin:0;font-size:26px;line-height:1;color:#202635;letter-spacing:0}
 .home-title h1 span{color:var(--maroon)}
 .home-title p{margin:4px 0 0;color:var(--muted);font-size:13px}
-.home-hero{background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px;
+.home-hero{background:#fff;border:1px solid var(--line);border-radius:14px;padding:7px;
   box-shadow:0 2px 8px rgba(20,25,40,.06);margin-bottom:10px}
+.hero-image{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px}
 .hero-sky{position:relative;height:152px;border-radius:12px;overflow:hidden;
   background:linear-gradient(#75c6ff 0%,#ccefff 58%,#dfe8d5 59%,#c6d1bd 100%)}
 .cloud{position:absolute;background:#fff;border-radius:999px;opacity:.9}

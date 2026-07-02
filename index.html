@@ -96,7 +96,16 @@
         <section id="screen-timetable" class="screen">
           <h2 class="screen-title">🚌 Bus Timetable</h2>
           <p class="screen-help">All campus shuttle routes, next bus times, service windows and frequency.</p>
+          <label class="search-box" for="timetableSearch">
+            <span>🔎</span>
+            <input id="timetableSearch" type="search" placeholder="Search route, stop, or faculty…" />
+          </label>
           <div id="timetableList" class="timetable-list"></div>
+        </section>
+
+        <section id="screen-route-timetable" class="screen">
+          <button class="back-btn" data-screen="screen-timetable">‹ Back to timetable</button>
+          <div id="routeTimetableDetail"></div>
         </section>
 
         <!-- 4) ALERTS / NOTIFICATIONS -->

@@ -8,6 +8,7 @@
 
 const App = (() => {
   const esc = s => String(s).replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
+  let timetableQuery = "";
 
   /* ---- screen routing ------------------------------------------------- */
   function showScreen(id) {
@@ -46,10 +47,57 @@ const App = (() => {
   }
 
   /* ---- Timetable screen ----------------------------------------------- */
+  function routeSearchText(route) {
+    return [
+      route.name,
+      route.note,
+      route.stops.map(id => {
+        const stop = KBUtil.stopById(id);
+        return `${stop.name} ${stop.aliases?.join(" ") || ""}`;
+      }).join(" ")
+    ].join(" ").toLowerCase();
+  }
+
+  function routeDepartures(route) {
+    const start = KBUtil.toMinutes(route.operating.start);
+    const end = KBUtil.toMinutes(route.operating.end);
+    const delay = KBUtil.delayMinutes(route.id);
+    const now = KBUtil.nowMinutes();
+    const departures = [];
+    for (let t = start; t <= end; t += route.headway) {
+      departures.push({
+        scheduledMins: t,
+        scheduled: KBUtil.fmt(t),
+        estimatedMins: t + delay,
+        estimated: KBUtil.fmt(t + delay),
+        isNext: t >= now && t === Math.ceil(Math.max(now - start, 0) / route.headway) * route.headway + start
+      });
+    }
+    return departures;
+  }
+
+  function departureGroups(route) {
+    const groups = [
+      { title: "Morning", range: "07:00–11:59", items: [] },
+      { title: "Afternoon", range: "12:00–16:59", items: [] },
+      { title: "Evening", range: "17:00–18:30", items: [] }
+    ];
+    routeDepartures(route).forEach(d => {
+      const hour = Math.floor(d.scheduledMins / 60);
+      const group = hour < 12 ? groups[0] : hour < 17 ? groups[1] : groups[2];
+      group.items.push(d);
+    });
+    return groups.filter(g => g.items.length);
+  }
+
   function renderTimetable() {
     const list = document.getElementById("timetableList");
     if (!list) return;
-    list.innerHTML = KB.routes.map(r => {
+    const search = document.getElementById("timetableSearch");
+    if (search && search.value !== timetableQuery) search.value = timetableQuery;
+    const q = timetableQuery.trim().toLowerCase();
+    const routes = q ? KB.routes.filter(r => routeSearchText(r).includes(q)) : KB.routes;
+    list.innerHTML = routes.length ? routes.map(r => {
       const firstStop = KBUtil.stopById(r.stops[0]);
       const nd = KBUtil.nextDeparture(r, firstStop.id);
       const nextLabel = nd.delayed ? `ETA ${nd.estimatedTime}` : `Next ${nd.scheduledTime}`;
@@ -57,7 +105,7 @@ const App = (() => {
         ? `<span>Delay</span><strong>+${nd.delayMins} min</strong>`
         : `<span>Status</span><strong>${nd.operating ? "Running" : "Closed now"}</strong>`;
       const stops = r.stops.map(id => KBUtil.stopById(id).name.split(" (")[0]).join(" › ");
-      return `<div class="timetable-card">
+      return `<button class="timetable-card" data-route-timetable="${r.id}">
         <div class="timetable-head">
           <b>${esc(r.name)}</b>
           <span class="timetable-next">${esc(nextLabel)}</span>
@@ -70,8 +118,41 @@ const App = (() => {
           ${delayRow}
         </div>
         <div class="timetable-stops">${esc(stops)}</div>
-      </div>`;
-    }).join("");
+      </button>`;
+    }).join("") : `<div class="timetable-empty">No routes match "${esc(timetableQuery)}". Try KP, CP, KDOJ, FKE, or Route A.</div>`;
+  }
+
+  function showRouteTimetable(routeId) {
+    const route = KBUtil.routeById(routeId);
+    if (!route) return;
+    const firstStop = KBUtil.stopById(route.stops[0]);
+    const nd = KBUtil.nextDeparture(route, firstStop.id);
+    const stopNames = route.stops.map(id => KBUtil.stopById(id).name.split(" (")[0]);
+    const groups = departureGroups(route).map(group => `
+      <section class="day-group">
+        <h3><span>${esc(group.title)}</span><span>${esc(group.range)}</span></h3>
+        <div class="departures">
+          ${group.items.map(d => `<span class="${d.scheduled === nd.scheduledTime ? "is-next" : ""}">${esc(d.estimated)}</span>`).join("")}
+        </div>
+      </section>`).join("");
+    const detail = document.getElementById("routeTimetableDetail");
+    detail.innerHTML = `
+      <div class="detail-hero">
+        <h2>${esc(route.name)}</h2>
+        <div class="detail-summary">
+          <div><span>Next bus</span><strong>${esc(nd.delayed ? nd.estimatedTime : nd.scheduledTime)}</strong></div>
+          <div><span>Frequency</span><strong>${esc(nd.frequency)}</strong></div>
+          <div><span>First bus</span><strong>${esc(nd.firstEstimated || nd.first)}</strong></div>
+          <div><span>Last bus</span><strong>${esc(nd.lastEstimated || nd.last)}</strong></div>
+        </div>
+      </div>
+      <div class="stop-sequence">
+        <h3>Route stops</h3>
+        <p>${esc(stopNames.join(" › "))}</p>
+      </div>
+      ${groups}
+      <p class="screen-help">Times shown are full-day departure times from ${esc(firstStop.name.split(" (")[0])}.${nd.delayed ? ` Current staff delay is already added (+${nd.delayMins} min).` : ""}</p>`;
+    showScreen("screen-route-timetable");
   }
 
   function showStop(stopId) {
@@ -242,6 +323,9 @@ const App = (() => {
       const stopBtn = e.target.closest("[data-stop]");
       if (stopBtn) { showStop(stopBtn.dataset.stop); return; }
 
+      const timetableBtn = e.target.closest("[data-route-timetable]");
+      if (timetableBtn) { showRouteTimetable(timetableBtn.dataset.routeTimetable); return; }
+
       const subBtn = e.target.closest("[data-sub]");
       if (subBtn) {
         const rid = subBtn.dataset.sub;
@@ -272,6 +356,13 @@ const App = (() => {
       if (t) onDelayToggle(t.dataset.delay, t.checked);
     });
 
+    document.body.addEventListener("input", e => {
+      const search = e.target.closest("#timetableSearch");
+      if (!search) return;
+      timetableQuery = search.value;
+      renderTimetable();
+    });
+
     // Chat composer.
     document.getElementById("chatForm").addEventListener("submit", e => {
       e.preventDefault();
@@ -300,7 +391,7 @@ const App = (() => {
     setInterval(updatePhoneClock, 15000);
   }
 
-  return { init, showScreen, showStop };
+  return { init, showScreen, showStop, showRouteTimetable };
 })();
 
 document.addEventListener("DOMContentLoaded", App.init);

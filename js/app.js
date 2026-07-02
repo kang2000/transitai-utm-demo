@@ -41,6 +41,19 @@ const App = (() => {
   }
 
   /* ---- Alerts screen -------------------------------------------------- */
+  function delaySummary(route) {
+    const stop = KBUtil.stopById(route.stops[0]);
+    const nd = KBUtil.nextDeparture(route, stop.id);
+    return `
+      <div class="alert-grid">
+        <span>Next bus</span><strong>${esc(stop.name.split(" (")[0])}</strong>
+        <span>Scheduled</span><strong>${nd.scheduledTime}</strong>
+        <span>Estimated</span><strong>${nd.estimatedTime}</strong>
+        <span>Delay</span><strong>+${nd.delayMins} min</strong>
+        <span>Service</span><strong>${nd.serviceWindow}, ${esc(nd.frequency.toLowerCase())}</strong>
+      </div>`;
+  }
+
   function renderAlerts() {
     const list = document.getElementById("alertList");
     const subs = document.getElementById("subList");
@@ -50,11 +63,12 @@ const App = (() => {
       ? delayed.map(r => `
           <div class="alert">
             <h4>⚠️ ${esc(r.name)} delayed</h4>
-            <p>Service on ${esc(r.name)} is running late. Subscribed users were notified by the resolution-logic engine.</p>
+            <p>Service is running late. Subscribed users were notified by the resolution-logic engine.</p>
+            ${delaySummary(r)}
             <time>just now · prototype simulation</time>
           </div>`).join("")
       : `<div class="alert info"><h4>✅ No active delays</h4>
-           <p>All routes are running to schedule (prototype simulation).</p></div>`;
+           <p>All routes are running to the simulated schedule. Route cards show first/last bus and service frequency.</p></div>`;
 
     const mySubs = KB.subscriptions.filter(s => s.user === Chat.DEMO_USER);
     subs.innerHTML = KB.routes.map(r => {
@@ -93,8 +107,13 @@ const App = (() => {
     box.innerHTML = KB.routes.map(r => {
       const on = KBUtil.isDelayed(r.id);
       const stops = r.stops.map(id => KBUtil.stopById(id).name.split(" (")[0]).join(" › ");
+      const delay = KBUtil.delayMinutes(r.id);
       return `<div class="route-row">
-        <div><div class="rname">${esc(r.name)}</div><div class="rstops">${esc(stops)}</div></div>
+        <div>
+          <div class="rname">${esc(r.name)}</div>
+          <div class="rstops">${esc(stops)}</div>
+          <div class="rschedule">Service ${esc(r.operating.start)}–${esc(r.operating.end)} · every ${r.headway} min${delay ? ` · delayed +${delay} min` : ""}</div>
+        </div>
         <label class="switch">
           <input type="checkbox" data-delay="${r.id}" ${on ? "checked" : ""}>
           <span class="slider"></span>
@@ -125,6 +144,7 @@ const App = (() => {
   /* When a route is toggled delayed: run proof + notify subscribers. */
   function onDelayToggle(routeId, isDelayed) {
     KBUtil.setDelayed(routeId, isDelayed);
+    renderAdmin();
     if (isDelayed) {
       runProof(routeId);
       // Notify every subscriber for whom the proof succeeds.

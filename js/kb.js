@@ -250,6 +250,12 @@ const KB = {
   ],
   /* Delayed(r) facts, toggled from the Staff Demo panel. */
   delayedRoutes: [],
+  /* Delay duration used by the Staff Demo. This is deliberately a simulation,
+     not a live GPS prediction. */
+  delayPolicy: {
+    defaultMins: 12,
+    label: "simulated staff delay"
+  },
   /* Logged feedback / escalations (Feedback screen). */
   feedbackLog: []
 };
@@ -324,7 +330,7 @@ const KBUtil = {
     KB.clock.label = label || (mode === "live" ? "Live device time" : "Custom demo time");
   },
 
-  /* Next departure for a route at a stop. Returns {time, minsAway, operating}.
+  /* Next departure for a route at a stop. Returns schedule + simulated delay.
      Buses leave the route origin every `headway` mins from start..end; the
      offset to a stop is its index position in the sequence (1 min/stop demo). */
   nextDeparture(route, stopId) {
@@ -332,26 +338,40 @@ const KBUtil = {
     const end   = this.toMinutes(route.operating.end);
     const offset = Math.max(0, route.stops.indexOf(stopId));
     const now = this.nowMinutes();
+    const delayMins = this.delayMinutes(route.id);
 
     // Build today's departure times at this stop.
     const times = [];
     for (let t = start; t <= end; t += route.headway) times.push(t + offset);
 
+    const withTiming = (scheduled, minsAway, operating) => {
+      const estimated = scheduled + delayMins;
+      return {
+        operating,
+        delayed: delayMins > 0,
+        delayMins,
+        delayLabel: KB.delayPolicy.label,
+        time: this.fmt(scheduled),
+        scheduledTime: this.fmt(scheduled),
+        estimatedTime: this.fmt(estimated),
+        minsAway,
+        estimatedMinsAway: minsAway == null ? null : Math.max(0, estimated - now),
+        first: this.fmt(times[0]),
+        last: this.fmt(times[times.length - 1]),
+        firstEstimated: this.fmt(times[0] + delayMins),
+        lastEstimated: this.fmt(times[times.length - 1] + delayMins),
+        serviceWindow: `${route.operating.start}–${route.operating.end}`,
+        frequency: `Every ${route.headway} min`,
+        timeBasis: this.clockSummary()
+      };
+    };
+
     const upcoming = times.filter(t => t >= now);
     if (now > end + offset) {
-      return { operating: false, time: this.fmt(times[0]),
-               minsAway: null, first: this.fmt(times[0]), last: this.fmt(times[times.length - 1]),
-               timeBasis: this.clockSummary() };
+      return withTiming(times[0], null, false);
     }
     const time = upcoming.length ? upcoming[0] : times[0];
-    return {
-      operating: now >= start && now <= end + offset,
-      time: this.fmt(time),
-      minsAway: upcoming.length ? time - now : null,
-      first: this.fmt(times[0]),
-      last: this.fmt(times[times.length - 1]),
-      timeBasis: this.clockSummary()
-    };
+    return withTiming(time, upcoming.length ? time - now : null, now >= start && now <= end + offset);
   },
 
   /* Subscription / delay / feedback mutators (used by app + resolution). */
@@ -365,6 +385,9 @@ const KBUtil = {
     KB.subscriptions = KB.subscriptions.filter(s => !(s.user === user && s.route === routeId));
   },
   isDelayed(routeId)  { return KB.delayedRoutes.includes(routeId); },
+  delayMinutes(routeId) {
+    return this.isDelayed(routeId) ? KB.delayPolicy.defaultMins : 0;
+  },
   setDelayed(routeId, on) {
     if (on && !this.isDelayed(routeId)) KB.delayedRoutes.push(routeId);
     if (!on) KB.delayedRoutes = KB.delayedRoutes.filter(r => r !== routeId);

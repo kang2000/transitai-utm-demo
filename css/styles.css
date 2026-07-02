@@ -74,9 +74,10 @@ body{margin:0;background:linear-gradient(160deg,#dfe4ee,#eef1f6);color:var(--ink
 .card h4{margin:0 0 8px;font-size:13.5px;display:flex;align-items:center;gap:7px}
 .card .row{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;
   border-bottom:1px dashed var(--line)}
-.card .row span:first-child{flex:0 0 92px;color:var(--muted)}
+.card .row span:first-child{flex:0 0 108px;color:var(--muted)}
 .card .row span:last-child{flex:1;text-align:right;overflow-wrap:anywhere}
 .card .row:last-child{border-bottom:0}
+.card .row.urgent span:last-child{color:var(--warn);font-weight:800}
 .card .big{font-size:20px;font-weight:800;color:var(--maroon)}
 .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;
   background:#eef3ff;color:var(--blue)}
@@ -110,6 +111,11 @@ body{margin:0;background:linear-gradient(160deg,#dfe4ee,#eef1f6);color:var(--ink
 .alert h4{margin:0 0 3px;font-size:13px}
 .alert p{margin:0;font-size:12px;color:var(--muted)}
 .alert time{font-size:10.5px;color:var(--muted)}
+.alert-grid{display:grid;grid-template-columns:80px 1fr;gap:3px 8px;margin:8px 0;
+  font-size:12px;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);
+  padding:7px 0}
+.alert-grid span{color:var(--muted)}
+.alert-grid strong{font-weight:800;text-align:right;overflow-wrap:anywhere}
 .sub-row{display:flex;justify-content:space-between;align-items:center;background:#fff;
   border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px}
 .empty{font-size:12px;color:var(--muted);text-align:center;padding:18px}
@@ -146,6 +152,7 @@ body{margin:0;background:linear-gradient(160deg,#dfe4ee,#eef1f6);color:var(--ink
   border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .route-row .rname{font-size:13px;font-weight:600}
 .route-row .rstops{font-size:11px;color:var(--muted)}
+.route-row .rschedule{font-size:10.5px;color:var(--maroon);margin-top:2px}
 .switch{position:relative;width:46px;height:26px;flex:0 0 auto}
 .switch input{opacity:0;width:0;height:0}
 .slider{position:absolute;inset:0;background:#cdd2dc;border-radius:999px;cursor:pointer;transition:.2s}

@@ -15,7 +15,8 @@ there is no Firebase, no backend server, no API key, and no install step.
 3. Ask: `When will the next bus arrive at CP?`
 4. Open **Staff Demo**, set the demo time to `10:00`, and toggle
    **BAS A1/A2** delayed.
-5. Open **Alerts** to show the proof-triggered notification.
+5. Open **Alerts** to show the proof-triggered notification with scheduled time,
+   estimated delayed time, service window, and frequency.
 
 ## Prototype Boundary
 

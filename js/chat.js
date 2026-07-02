@@ -51,6 +51,33 @@ const Chat = (() => {
   function srcLine(note) { return `<span class="src">📚 Source: ${esc(note)}</span>`; }
   const routeDataLine = r => `<div class="row"><span>Route data</span><span>${esc(r.source || "Prototype data")}</span></div>`;
   const timeBasisLine = nd => `<div class="row"><span>Time basis</span><span>${esc(nd.timeBasis)}</span></div>`;
+  function statusPill(nd) {
+    if (nd.delayed) return `<span class="pill warn">delayed +${nd.delayMins} min</span>`;
+    return nd.operating ? '<span class="pill ok">running</span>' : '<span class="pill warn">closed now</span>';
+  }
+  function scheduleRows(r, nd, mainLabel = "Next departure") {
+    const timing = nd.delayed
+      ? `<div class="row"><span>Scheduled</span><span>${nd.scheduledTime}</span></div>
+         <div class="row"><span>Est. departure</span><span class="big">${nd.estimatedTime}</span></div>
+         <div class="row urgent"><span>Delay</span><span>+${nd.delayMins} min (${esc(nd.delayLabel)})</span></div>`
+      : `<div class="row"><span>${mainLabel}</span><span class="big">${nd.scheduledTime}</span></div>`;
+    return timing + `
+      <div class="row"><span>First bus</span><span>${nd.first}</span></div>
+      <div class="row"><span>Last bus</span><span>${nd.last}</span></div>
+      <div class="row"><span>Service window</span><span>${nd.serviceWindow}</span></div>
+      <div class="row"><span>Frequency</span><span>${esc(nd.frequency)}</span></div>`;
+  }
+  function arrivalRows(nd) {
+    const eta = nd.estimatedMinsAway == null ? "—" : (nd.estimatedMinsAway <= 0 ? "now" : nd.estimatedMinsAway + " min");
+    if (!nd.delayed) {
+      return `<div class="row"><span>Arriving in</span><span class="big">${eta}</span></div>
+        <div class="row"><span>Scheduled</span><span>${nd.scheduledTime}</span></div>`;
+    }
+    return `<div class="row"><span>Arriving in</span><span class="big">${eta}</span></div>
+      <div class="row"><span>Scheduled</span><span>${nd.scheduledTime}</span></div>
+      <div class="row"><span>Est. arrival</span><span>${nd.estimatedTime}</span></div>
+      <div class="row urgent"><span>Delay</span><span>+${nd.delayMins} min (${esc(nd.delayLabel)})</span></div>`;
+  }
 
   function handleSchedule(q, note) {
     const stop = KBUtil.findStop(q) || (memory.lastStop && KBUtil.stopById(memory.lastStop));
@@ -63,10 +90,8 @@ const Chat = (() => {
       const nd = KBUtil.nextDeparture(r, stop.id);
       memory.lastRoute = r.id;
       addCard(`
-        <h4>🕑 ${esc(r.name)} ${nd.operating ? '<span class="pill ok">running</span>' : '<span class="pill warn">closed now</span>'}</h4>
-        <div class="row"><span>Next departure</span><span class="big">${nd.time}</span></div>
-        <div class="row"><span>Operating hours</span><span>${r.operating.start}–${r.operating.end}</span></div>
-        <div class="row"><span>Every</span><span>${r.headway} min</span></div>
+        <h4>🕑 ${esc(r.name)} ${statusPill(nd)}</h4>
+        ${scheduleRows(r, nd)}
         <div class="row"><span>This stop</span><span>${esc(stop.name)}</span></div>
         ${timeBasisLine(nd)}
         ${routeDataLine(r)}
@@ -90,13 +115,16 @@ const Chat = (() => {
       const i = r.stops.indexOf(origin.id), j = r.stops.indexOf(dest.id);
       const seq = r.stops.slice(Math.min(i, j), Math.max(i, j) + 1);
       const seqHtml = seq.map(id => `<span>${esc(KBUtil.stopById(id).name.split(" (")[0])}</span>`).join('<i>›</i>');
+      const nd = KBUtil.nextDeparture(r, origin.id);
       memory.lastRoute = r.id;
       addMsg("bot", `You can take a direct route from <strong>${esc(origin.name)}</strong> to <strong>${esc(dest.name)}</strong>:`);
       addCard(`
-        <h4>🧭 ${esc(r.name)} <span class="pill">direct</span></h4>
+        <h4>🧭 ${esc(r.name)} <span class="pill">direct</span> ${statusPill(nd)}</h4>
         <div class="seq">${seqHtml}</div>
         <div class="row" style="margin-top:8px"><span>Board at</span><span>${esc(origin.name.split(" (")[0])}</span></div>
         <div class="row"><span>Alight at</span><span>${esc(dest.name.split(" (")[0])}</span></div>
+        ${scheduleRows(r, nd, "Next from origin")}
+        ${timeBasisLine(nd)}
         ${routeDataLine(r)}
         <button class="link-btn" data-stop="${dest.id}">View ${esc(dest.name.split(" (")[0])} stop detail ›</button>
         ${srcLine(note)}`);
@@ -112,15 +140,15 @@ const Chat = (() => {
     const r = KBUtil.routesServing(stop.id)[0];
     if (!r) return addMsg("bot", `No route data for ${esc(stop.name)}.`);
     const nd = KBUtil.nextDeparture(r, stop.id);
-    const away = nd.minsAway == null ? "—" : (nd.minsAway <= 0 ? "now" : nd.minsAway + " min");
     addMsg("bot", `Estimated arrival at <strong>${esc(stop.name)}</strong>:`);
     addCard(`
-      <h4>⏱️ ${esc(r.name)} <span class="sim-tag">simulated ETA</span></h4>
-      <div class="row"><span>Arriving in</span><span class="big">${away}</span></div>
-      <div class="row"><span>Scheduled time</span><span>${nd.time}</span></div>
+      <h4>⏱️ ${esc(r.name)} <span class="sim-tag">simulated ETA</span> ${statusPill(nd)}</h4>
+      ${arrivalRows(nd)}
+      <div class="row"><span>Service window</span><span>${nd.serviceWindow}</span></div>
+      <div class="row"><span>Frequency</span><span>${esc(nd.frequency)}</span></div>
       ${timeBasisLine(nd)}
       <div class="row"><span>Last updated</span><span>just now (sim)</span></div>
-      <div class="row muted"><span colspan="2">Fallback to timetable if live feed is unavailable.</span></div>
+      <div class="row muted"><span>Live feed</span><span>Not connected; using simulated timetable fallback.</span></div>
       ${routeDataLine(r)}
       ${srcLine(note)}`);
   }

@@ -15,9 +15,63 @@ const App = (() => {
       s.classList.toggle("is-active", s.id === id));
     document.querySelectorAll(".tab").forEach(t =>
       t.classList.toggle("is-active", t.dataset.screen === id));
+    if (id === "screen-home")     renderHome();
+    if (id === "screen-timetable") renderTimetable();
     if (id === "screen-alerts")   renderAlerts();
     if (id === "screen-admin")    { renderDemoTimeControls(); renderAdmin(); }
     if (id === "screen-feedback") renderFeedbackLog();
+  }
+
+  function subscribedRouteIds() {
+    return new Set(KB.subscriptions
+      .filter(s => s.user === Chat.DEMO_USER)
+      .map(s => s.route));
+  }
+
+  function subscribedDelayedRoutes() {
+    const subs = subscribedRouteIds();
+    return KB.delayedRoutes
+      .map(rid => KBUtil.routeById(rid))
+      .filter(r => r && subs.has(r.id));
+  }
+
+  /* ---- Home screen ---------------------------------------------------- */
+  function renderHome() {
+    const homeAlertText = document.getElementById("homeAlertText");
+    if (!homeAlertText) return;
+    const count = subscribedDelayedRoutes().length;
+    homeAlertText.textContent = count
+      ? `${count} subscribed route alert${count === 1 ? "" : "s"} active.`
+      : "No subscribed route alerts.";
+  }
+
+  /* ---- Timetable screen ----------------------------------------------- */
+  function renderTimetable() {
+    const list = document.getElementById("timetableList");
+    if (!list) return;
+    list.innerHTML = KB.routes.map(r => {
+      const firstStop = KBUtil.stopById(r.stops[0]);
+      const nd = KBUtil.nextDeparture(r, firstStop.id);
+      const nextLabel = nd.delayed ? `ETA ${nd.estimatedTime}` : `Next ${nd.scheduledTime}`;
+      const delayRow = nd.delayed
+        ? `<span>Delay</span><strong>+${nd.delayMins} min</strong>`
+        : `<span>Status</span><strong>${nd.operating ? "Running" : "Closed now"}</strong>`;
+      const stops = r.stops.map(id => KBUtil.stopById(id).name.split(" (")[0]).join(" › ");
+      return `<div class="timetable-card">
+        <div class="timetable-head">
+          <b>${esc(r.name)}</b>
+          <span class="timetable-next">${esc(nextLabel)}</span>
+        </div>
+        <div class="timetable-grid">
+          <span>First bus</span><strong>${nd.first}</strong>
+          <span>Last bus</span><strong>${nd.last}</strong>
+          <span>Service</span><strong>${nd.serviceWindow}</strong>
+          <span>Frequency</span><strong>${esc(nd.frequency)}</strong>
+          ${delayRow}
+        </div>
+        <div class="timetable-stops">${esc(stops)}</div>
+      </div>`;
+    }).join("");
   }
 
   function showStop(stopId) {
@@ -58,7 +112,8 @@ const App = (() => {
     const list = document.getElementById("alertList");
     const subs = document.getElementById("subList");
 
-    const delayed = KB.delayedRoutes.map(rid => KBUtil.routeById(rid));
+    const delayed = subscribedDelayedRoutes();
+    const hiddenDelayedCount = KB.delayedRoutes.length - delayed.length;
     list.innerHTML = delayed.length
       ? delayed.map(r => `
           <div class="alert">
@@ -68,7 +123,9 @@ const App = (() => {
             <time>just now · staff update</time>
           </div>`).join("")
       : `<div class="alert info"><h4>✅ No active delays</h4>
-           <p>All routes are running to schedule. Route cards show first/last bus and service frequency.</p></div>`;
+           <p>${hiddenDelayedCount
+             ? "No alerts for your subscribed routes. Other delayed routes stay hidden until you subscribe."
+             : "All subscribed routes are running to schedule."}</p></div>`;
 
     const mySubs = KB.subscriptions.filter(s => s.user === Chat.DEMO_USER);
     subs.innerHTML = KB.routes.map(r => {
@@ -146,6 +203,10 @@ const App = (() => {
   function onDelayToggle(routeId, isDelayed) {
     KBUtil.setDelayed(routeId, isDelayed);
     renderAdmin();
+    renderHome();
+    if (document.getElementById("screen-timetable")?.classList.contains("is-active")) {
+      renderTimetable();
+    }
     if (isDelayed) {
       runProof(routeId);
       // Notify every subscriber for whom the proof succeeds.
@@ -188,6 +249,7 @@ const App = (() => {
           ? KBUtil.unsubscribe(Chat.DEMO_USER, rid)
           : KBUtil.subscribe(Chat.DEMO_USER, rid);
         renderAlerts();
+        renderHome();
         return;
       }
     });
@@ -199,6 +261,10 @@ const App = (() => {
         const [mode, time, label] = clock.value.split("|");
         KBUtil.setClock(mode, time, label);
         renderDemoTimeControls();
+        renderHome();
+        if (document.getElementById("screen-timetable")?.classList.contains("is-active")) {
+          renderTimetable();
+        }
         return;
       }
 
@@ -229,6 +295,7 @@ const App = (() => {
   function init() {
     Chat.init();
     bind();
+    renderHome();
     updatePhoneClock();
     setInterval(updatePhoneClock, 15000);
   }

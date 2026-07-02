@@ -48,7 +48,7 @@ const Chat = (() => {
   }
 
   /* ---- per-intent handlers ------------------------------------------- */
-  function srcLine(note) { return `<span class="src">📚 Source: ${esc(note)}</span>`; }
+  function srcLine(note) { return `<span class="src">📚 Source: UTM public route listings · updated 2 July 2026</span>`; }
   const routeDataLine = r => `<div class="row"><span>Route data</span><span>${esc(r.source || "Campus transit data")}</span></div>`;
   const timeBasisLine = nd => `<div class="row"><span>Time basis</span><span>${esc(nd.timeBasis)}</span></div>`;
   function statusPill(nd) {
@@ -69,13 +69,18 @@ const Chat = (() => {
   }
   function arrivalRows(nd) {
     const eta = nd.estimatedMinsAway == null ? "—" : (nd.estimatedMinsAway <= 0 ? "now" : nd.estimatedMinsAway + " min");
+    const etaClass = nd.delayed ? "arrival-metric late" : "arrival-metric";
+    const summary = `<div class="arrival-summary">
+      <div class="${etaClass}"><span>ETA</span><strong>${nd.estimatedTime}</strong></div>
+      <div class="arrival-metric secondary"><span>Arrives in</span><strong>${eta}</strong></div>
+    </div>`;
     if (!nd.delayed) {
-      return `<div class="row"><span>Arriving in</span><span class="big">${eta}</span></div>
-        <div class="row"><span>Scheduled</span><span>${nd.scheduledTime}</span></div>`;
+      return `${summary}
+        <div class="row"><span>Scheduled</span><span>${nd.scheduledTime}</span></div>
+        <div class="row"><span>Status</span><span>On time</span></div>`;
     }
-    return `<div class="row"><span>Arriving in</span><span class="big">${eta}</span></div>
+    return `${summary}
       <div class="row"><span>Scheduled</span><span>${nd.scheduledTime}</span></div>
-      <div class="row"><span>Est. arrival</span><span>${nd.estimatedTime}</span></div>
       <div class="row urgent"><span>Delay</span><span>+${nd.delayMins} min (${esc(nd.delayLabel)})</span></div>`;
   }
 
@@ -142,14 +147,12 @@ const Chat = (() => {
     const nd = KBUtil.nextDeparture(r, stop.id);
     addMsg("bot", `Estimated arrival at <strong>${esc(stop.name)}</strong>:`);
     addCard(`
-      <h4>⏱️ ${esc(r.name)} <span class="pill">estimated ETA</span> ${statusPill(nd)}</h4>
+      <h4>⏱️ ${esc(r.name)} ${statusPill(nd)}</h4>
       ${arrivalRows(nd)}
+      <div class="row"><span>Stop</span><span>${esc(stop.name)}</span></div>
       <div class="row"><span>Service window</span><span>${nd.serviceWindow}</span></div>
       <div class="row"><span>Frequency</span><span>${esc(nd.frequency)}</span></div>
-      ${timeBasisLine(nd)}
       <div class="row"><span>Last updated</span><span>just now</span></div>
-      <div class="row muted"><span>Status</span><span>Using timetable estimate.</span></div>
-      ${routeDataLine(r)}
       ${srcLine(note)}`);
   }
 

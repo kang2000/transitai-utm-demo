@@ -38,8 +38,60 @@
 
         <!-- ============ SCREENS ============ -->
 
-        <!-- 1) HOME / CHAT QUERY / (Schedule, Route, Arrival render here) -->
-        <section id="screen-chat" class="screen is-active">
+        <!-- 1) HOME -->
+        <section id="screen-home" class="screen is-active">
+          <div class="home-title">
+            <h1>Transit<span>AI</span> UTM</h1>
+            <p>Your Campus Bus Assistant</p>
+          </div>
+
+          <div class="home-hero" aria-label="UTM shuttle bus illustration">
+            <div class="hero-sky">
+              <span class="cloud c1"></span>
+              <span class="cloud c2"></span>
+              <span class="utm-sign">UTM</span>
+              <div class="shelter"></div>
+              <div class="road"></div>
+              <div class="bus-art">
+                <span class="route-board">ROUTE A</span>
+                <span class="bus-window w1"></span>
+                <span class="bus-window w2"></span>
+                <span class="bus-window w3"></span>
+                <span class="bus-front"></span>
+                <span class="wheel left"></span>
+                <span class="wheel right"></span>
+              </div>
+              <div class="campus-building"></div>
+              <div class="tree"></div>
+            </div>
+          </div>
+
+          <div class="home-actions">
+            <button class="home-card" data-screen="screen-chat">
+              <span class="home-icon">🧭</span>
+              <span><b>Plan Your Trip</b><small>Chat for route and arrival times.</small></span>
+              <i>›</i>
+            </button>
+            <button class="home-card" data-screen="screen-timetable">
+              <span class="home-icon">🚌</span>
+              <span><b>Bus Timetable</b><small>View all route schedules and next buses.</small></span>
+              <i>›</i>
+            </button>
+            <button class="home-card" data-screen="screen-alerts">
+              <span class="home-icon">🔔</span>
+              <span><b>Service Alerts</b><small id="homeAlertText">No subscribed route alerts.</small></span>
+              <i>›</i>
+            </button>
+            <button class="home-card" data-screen="screen-feedback">
+              <span class="home-icon">📝</span>
+              <span><b>Report an Issue</b><small>Send route or stop feedback.</small></span>
+              <i>›</i>
+            </button>
+          </div>
+        </section>
+
+        <!-- 2) CHAT QUERY / (Schedule, Route, Arrival render here) -->
+        <section id="screen-chat" class="screen">
           <div id="thread" class="thread" aria-live="polite"></div>
 
           <div class="quick-actions" id="quickActions">
@@ -57,7 +109,14 @@
           </form>
         </section>
 
-        <!-- 2) ALERTS / NOTIFICATIONS -->
+        <!-- 3) TIMETABLE -->
+        <section id="screen-timetable" class="screen">
+          <h2 class="screen-title">🚌 Bus Timetable</h2>
+          <p class="screen-help">All campus shuttle routes, next bus times, service windows and frequency.</p>
+          <div id="timetableList" class="timetable-list"></div>
+        </section>
+
+        <!-- 4) ALERTS / NOTIFICATIONS -->
         <section id="screen-alerts" class="screen">
           <h2 class="screen-title">🔔 Alerts &amp; Notifications</h2>
           <p class="screen-help">Delay notices are produced by the resolution-logic
@@ -68,16 +127,16 @@
           <div id="subList" class="sub-list"></div>
         </section>
 
-        <!-- 3) BUS STOP DETAIL -->
+        <!-- 5) BUS STOP DETAIL -->
         <section id="screen-stop" class="screen">
-          <button class="back-btn" data-screen="screen-chat">‹ Back to chat</button>
+          <button class="back-btn" data-screen="screen-home">‹ Back to home</button>
           <h2 class="screen-title">📍 Bus Stop Detail</h2>
           <div id="stopDetail" class="stop-detail"></div>
         </section>
 
-        <!-- 4) FEEDBACK / ESCALATE -->
+        <!-- 6) FEEDBACK / ESCALATE -->
         <section id="screen-feedback" class="screen">
-          <button class="back-btn" data-screen="screen-chat">‹ Back to chat</button>
+          <button class="back-btn" data-screen="screen-home">‹ Back to home</button>
           <h2 class="screen-title">📝 Feedback / Escalate</h2>
           <p class="screen-help">Report wrong information or an unresolved issue.
             It is logged for transport staff follow-up.</p>
@@ -98,7 +157,7 @@
           <div id="fbLog" class="fb-log"></div>
         </section>
 
-        <!-- 5) STAFF DEMO PANEL (drives the resolution proof) -->
+        <!-- 7) STAFF DEMO PANEL (drives the resolution proof) -->
         <section id="screen-admin" class="screen">
           <h2 class="screen-title">🛠️ Staff / Demo Control
             <span class="sim-tag">demo control</span></h2>
@@ -130,9 +189,10 @@
 
         <!-- ============ Bottom navigation ============ -->
         <nav class="tabbar">
-          <button class="tab is-active" data-screen="screen-chat">💬<span>Chat</span></button>
+          <button class="tab is-active" data-screen="screen-home">🏠<span>Home</span></button>
+          <button class="tab" data-screen="screen-chat">💬<span>Chat</span></button>
+          <button class="tab" data-screen="screen-timetable">🚌<span>Timetable</span></button>
           <button class="tab" data-screen="screen-alerts">🔔<span>Alerts</span></button>
-          <button class="tab" data-screen="screen-feedback">📝<span>Feedback</span></button>
           <button class="tab" data-screen="screen-admin">🛠️<span>Staff Demo</span></button>
         </nav>
 

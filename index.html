@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TransitAI UTM — Campus Transport Chatbot (Prototype)</title>
+  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;🚍&lt;/text&gt;&lt;/svg&gt;" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- Prototype banner (visible "this is a POC" label for the grader) -->
+  <div class="proto-banner">
+    TransitAI UTM · Interactive Prototype (Proof of Concept) ·
+    <strong>uses prototype sample data &amp; simulated real-time</strong>
+  </div>
+
+  <main class="stage">
+    <!-- ================= PHONE FRAME ================= -->
+    <div class="phone" role="application" aria-label="TransitAI UTM chatbot">
+      <div class="phone-notch"></div>
+      <div class="app">
+        <div class="statusbar" aria-label="Phone status">
+          <span id="phoneTime">10:00</span>
+          <span class="status-icons">5G ▰</span>
+        </div>
+
+        <!-- ---------- App header ---------- -->
+        <header class="app-header">
+          <div class="brand">
+            <span class="brand-logo">🚍</span>
+            <div>
+              <div class="brand-name">TransitAI&nbsp;UTM</div>
+              <div class="brand-sub">Campus transport assistant</div>
+            </div>
+          </div>
+          <div id="intentChip" class="intent-chip hidden" title="Detected intent &amp; confidence"></div>
+        </header>
+
+        <!-- ============ SCREENS ============ -->
+
+        <!-- 1) HOME / CHAT QUERY / (Schedule, Route, Arrival render here) -->
+        <section id="screen-chat" class="screen is-active">
+          <div id="thread" class="thread" aria-live="polite"></div>
+
+          <div class="quick-actions" id="quickActions">
+            <button class="qa" data-q="When is the next bus to FKE?">🕑 Next bus</button>
+            <button class="qa" data-q="How do I get from KTDI to P19 FKE?">🧭 Route guidance</button>
+            <button class="qa" data-q="When will the next bus arrive at CP?">⏱️ Arrival</button>
+            <button class="qa" data-q="Where is the FC bus stop?">📍 Bus stop</button>
+            <button class="qa" data-screen="screen-alerts">🔔 Alerts</button>
+            <button class="qa" data-q="Is the shuttle free?">❓ FAQ</button>
+          </div>
+
+          <form id="chatForm" class="composer" autocomplete="off">
+            <input id="chatInput" type="text" placeholder="Ask about schedule, route, arrival, or a stop…" />
+            <button type="submit" aria-label="Send">➤</button>
+          </form>
+        </section>
+
+        <!-- 2) ALERTS / NOTIFICATIONS -->
+        <section id="screen-alerts" class="screen">
+          <h2 class="screen-title">🔔 Alerts &amp; Notifications
+            <span class="sim-tag">simulated</span></h2>
+          <p class="screen-help">Delay notices are produced by the resolution-logic
+            engine when a route you subscribe to is delayed.</p>
+          <div id="alertList" class="alert-list"></div>
+
+          <h3 class="sub">Your route subscriptions</h3>
+          <div id="subList" class="sub-list"></div>
+        </section>
+
+        <!-- 3) BUS STOP DETAIL -->
+        <section id="screen-stop" class="screen">
+          <button class="back-btn" data-screen="screen-chat">‹ Back to chat</button>
+          <h2 class="screen-title">📍 Bus Stop Detail</h2>
+          <div id="stopDetail" class="stop-detail"></div>
+        </section>
+
+        <!-- 4) FEEDBACK / ESCALATE -->
+        <section id="screen-feedback" class="screen">
+          <button class="back-btn" data-screen="screen-chat">‹ Back to chat</button>
+          <h2 class="screen-title">📝 Feedback / Escalate</h2>
+          <p class="screen-help">Report wrong information or an unresolved issue.
+            It is logged for transport staff follow-up.</p>
+          <form id="feedbackForm" class="feedback-form">
+            <label>Issue type
+              <select id="fbType">
+                <option>Wrong schedule / route info</option>
+                <option>Missed the bus</option>
+                <option>Bus did not arrive</option>
+                <option>Other</option>
+              </select>
+            </label>
+            <label>Details
+              <textarea id="fbText" rows="3" placeholder="Describe the problem…"></textarea>
+            </label>
+            <button type="submit">Submit report</button>
+          </form>
+          <div id="fbLog" class="fb-log"></div>
+        </section>
+
+        <!-- 5) STAFF DEMO PANEL (drives the resolution proof) -->
+        <section id="screen-admin" class="screen">
+          <h2 class="screen-title">🛠️ Staff / Demo Control
+            <span class="sim-tag">demo control</span></h2>
+          <p class="screen-help">Transport staff demo controls. Mark a route delayed to trigger the
+            <strong>resolution-refutation</strong> proof that notifies subscribed users. The
+            separate Word file remains the Administrator Manual for grading.</p>
+
+          <div class="demo-time">
+            <label for="demoTimeSelect">Demo time</label>
+            <select id="demoTimeSelect">
+              <option value="demo|08:00|Morning peak demo">08:00 · Morning peak</option>
+              <option value="demo|10:00|Morning class demo" selected>10:00 · Class demo</option>
+              <option value="demo|13:00|Lunch demo">13:00 · Lunch</option>
+              <option value="demo|17:30|Evening return demo">17:30 · Evening return</option>
+              <option value="demo|20:30|Night closed-service demo">20:30 · Night closed-service</option>
+              <option value="live||Live device time">Live device time</option>
+            </select>
+            <small id="demoTimeNote">Schedule and ETA cards use this time.</small>
+          </div>
+
+          <div id="routeAdmin" class="route-admin"></div>
+
+          <h3 class="sub">Resolution proof trace
+            <span class="muted">(report Figure 5.2)</span></h3>
+          <div id="proofBox" class="proof-box">
+            <em class="muted">Toggle a delay above to run the proof…</em>
+          </div>
+        </section>
+
+        <!-- ============ Bottom navigation ============ -->
+        <nav class="tabbar">
+          <button class="tab is-active" data-screen="screen-chat">💬<span>Chat</span></button>
+          <button class="tab" data-screen="screen-alerts">🔔<span>Alerts</span></button>
+          <button class="tab" data-screen="screen-feedback">📝<span>Feedback</span></button>
+          <button class="tab" data-screen="screen-admin">🛠️<span>Staff Demo</span></button>
+        </nav>
+
+      </div><!-- /.app -->
+    </div><!-- /.phone -->
+
+    <!-- Side helper: intent transparency / what just happened -->
+    <aside class="explain">
+      <h3>What the AI just did</h3>
+      <ol id="explainLog" class="explain-log">
+        <li class="muted">Send a message to see intent recognition,
+            knowledge retrieval and the data source.</li>
+      </ol>
+      <p class="explain-foot">This panel exposes the AI pipeline
+        (intent → retrieval → response) for transparency.</p>
+    </aside>
+  </main>
+
+  <!-- Scripts: data first, then engines, then controllers -->
+  <script src="js/kb.js"></script>
+  <script src="js/intent.js"></script>
+  <script src="js/retriever.js"></script>
+  <script src="js/resolution.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

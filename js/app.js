@@ -128,50 +128,97 @@ const App = (() => {
     const firstStop = KBUtil.stopById(route.stops[0]);
     const nd = KBUtil.nextDeparture(route, firstStop.id);
     const stopNames = route.stops.map(id => KBUtil.stopById(id).name.split(" (")[0]);
+    const [routeCode, routePath = "Campus shuttle route"] = route.name.split("—").map(s => s.trim());
+    const metric = (label, value, extra = "") => `
+      <div class="metric-card ${extra}">
+        <span>${esc(label)}</span>
+        <strong>${esc(value)}</strong>
+      </div>`;
     const groups = departureGroups(route).map(group => `
       <section class="day-group">
-        <h3><span>${esc(group.title)}</span><span>${esc(group.range)}</span></h3>
+        <h3><span>${esc(group.title)}</span><small>${esc(group.range)}</small></h3>
         <div class="departures">
           ${group.items.map(d => `<span class="${d.scheduled === nd.scheduledTime ? "is-next" : ""}">${esc(d.estimated)}</span>`).join("")}
         </div>
       </section>`).join("");
     const detail = document.getElementById("routeTimetableDetail");
     detail.innerHTML = `
-      <div class="detail-hero">
-        <h2>${esc(route.name)}</h2>
-        <div class="detail-summary">
-          <div><span>Next bus</span><strong>${esc(nd.delayed ? nd.estimatedTime : nd.scheduledTime)}</strong></div>
-          <div><span>Frequency</span><strong>${esc(nd.frequency)}</strong></div>
-          <div><span>First bus</span><strong>${esc(nd.firstEstimated || nd.first)}</strong></div>
-          <div><span>Last bus</span><strong>${esc(nd.lastEstimated || nd.last)}</strong></div>
+      <div class="route-detail-card">
+        <div class="card-eyebrow">
+          <span>Full-day route timetable</span>
+          <small>${esc(nd.timeBasis)}</small>
+        </div>
+        <h2>${esc(routeCode)}</h2>
+        <p>${esc(routePath)}</p>
+        <div class="metric-grid">
+          ${metric(nd.delayed ? "Estimated" : "Next bus", nd.delayed ? nd.estimatedTime : nd.scheduledTime, "is-primary")}
+          ${metric("Frequency", nd.frequency)}
+          ${metric("First bus", nd.firstEstimated || nd.first)}
+          ${metric("Last bus", nd.lastEstimated || nd.last)}
         </div>
       </div>
-      <div class="stop-sequence">
-        <h3>Route stops</h3>
-        <p>${esc(stopNames.join(" › "))}</p>
+      <div class="route-line-card">
+        <div class="card-title">
+          <span>Route stops</span>
+          <small>${stopNames.length} stops</small>
+        </div>
+        <div class="route-line">
+          ${stopNames.map((name, i) => `
+            <span class="route-stop ${i === 0 ? "is-first" : ""} ${i === stopNames.length - 1 ? "is-last" : ""}">
+              <i></i><b>${esc(name)}</b>
+            </span>`).join("")}
+        </div>
       </div>
       ${groups}
-      <p class="screen-help">Times shown are full-day departure times from ${esc(firstStop.name.split(" (")[0])}.${nd.delayed ? ` Current staff delay is already added (+${nd.delayMins} min).` : ""}</p>`;
+      <p class="source-note">Source: configured campus shuttle timetable from ${esc(firstStop.name.split(" (")[0])}.${nd.delayed ? ` Delay +${nd.delayMins} min included.` : ""}</p>`;
     showScreen("screen-route-timetable");
   }
 
   function showStop(stopId) {
     const s = KBUtil.stopById(stopId); if (!s) return;
-    const routes = KBUtil.routesServing(stopId).map(r => r.name).join(", ") || "—";
+    const servingRoutes = KBUtil.routesServing(stopId);
+    const routeCards = servingRoutes.length ? servingRoutes.map(r => {
+      const [routeCode, routePath = "Campus shuttle route"] = r.name.split("—").map(part => part.trim());
+      const nd = KBUtil.nextDeparture(r, stopId);
+      return `<div class="stop-route-card">
+        <div>
+          <strong>${esc(routeCode)}</strong>
+          <span>${esc(routePath)}</span>
+        </div>
+        <em>${esc(nd.delayed ? `ETA ${nd.estimatedTime}` : `Next ${nd.scheduledTime}`)}</em>
+      </div>`;
+    }).join("") : `<div class="empty-card">No stored route serves this stop yet.</div>`;
     document.getElementById("stopDetail").innerHTML = `
-      <div class="hero">
+      <div class="stop-overview-card">
+        <span class="card-kicker">Bus stop</span>
         <h3>${esc(s.name)}</h3>
         <p>${esc(s.landmark)}</p>
       </div>
-      <div class="row"><strong>Routes serving this stop</strong></div>
-      <p style="font-size:13px;margin:4px 0 10px">${esc(routes)}</p>
-      <div class="row"><strong>Data status</strong></div>
-      <p style="font-size:13px;margin:4px 0 10px">${esc(s.status || "campus data")}</p>
-      <div class="row"><strong>Facilities nearby</strong></div>
-      <div class="facil">${s.facilities.map(f => `<span>${esc(f)}</span>`).join("")}</div>
-      <div class="row" style="margin-top:8px"><strong>Walking direction</strong></div>
-      <p style="font-size:13px;margin:4px 0">${esc(s.walking)}</p>
-      <span class="src" style="font-size:11px;color:#6b7280">📚 ${esc(KB.meta.sourceNote)}</span>`;
+      <section class="transit-card">
+        <div class="card-title">
+          <span>Routes serving this stop</span>
+          <small>${servingRoutes.length || "No"} route${servingRoutes.length === 1 ? "" : "s"}</small>
+        </div>
+        ${routeCards}
+      </section>
+      <section class="status-grid">
+        <div class="status-card">
+          <span>Data status</span>
+          <strong>${esc(s.status || "Campus data")}</strong>
+        </div>
+        <div class="status-card">
+          <span>Facilities nearby</span>
+          <div class="facil">${s.facilities.map(f => `<em>${esc(f)}</em>`).join("")}</div>
+        </div>
+      </section>
+      <section class="walking-card">
+        <div class="walk-icon">↗</div>
+        <div>
+          <span>Walking direction</span>
+          <p>${esc(s.walking)}</p>
+        </div>
+      </section>
+      <p class="source-note">📚 Source: public route/stop listings where available; walking and ETA values use configured campus estimates.</p>`;
     showScreen("screen-stop");
   }
 
